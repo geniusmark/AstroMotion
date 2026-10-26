@@ -1,0 +1,762 @@
+/* ==========================================================================
+   AstroMotion - 3D Astronomical Observatory Stylesheet
+   Modern Glassmorphism, Deep Space Theme, Responsive HUD & Control Dock
+   ========================================================================== */
+
+:root {
+  --bg-space: #03060f;
+  --panel-bg: rgba(10, 15, 28, 0.78);
+  --panel-border: rgba(255, 255, 255, 0.09);
+  --panel-border-glow: rgba(0, 229, 255, 0.25);
+  
+  --text-main: #f0f4fc;
+  --text-muted: #8b9bb4;
+  --text-accent: #00e5ff;
+  
+  --accent-cyan: #00e5ff;
+  --accent-gold: #ffd166;
+  --accent-sun: #ffaa00;
+  --accent-rose: #ff3366;
+  --accent-purple: #9d4edd;
+  
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-space);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+#canvas-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ==========================================================================
+   Loading Overlay
+   ========================================================================== */
+#loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #0a1124 0%, #020409 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+#loading-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.loader-spinner {
+  width: 54px;
+  height: 54px;
+  border: 3px solid rgba(0, 229, 255, 0.15);
+  border-top-color: var(--accent-cyan);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+.loader-text {
+  font-size: 1.15rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.loader-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   Observatory HUD & UI Panels
+   ========================================================================== */
+.observatory-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 16px;
+  gap: 16px;
+}
+
+.observatory-hud * {
+  pointer-events: auto;
+}
+
+/* Common Panel Glassmorphism */
+.glass-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+  border-radius: var(--radius-lg);
+  color: var(--text-main);
+  transition: all 0.25s ease;
+}
+
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+/* --------------------------------------------------------------------------
+   Top Bar Header
+   -------------------------------------------------------------------------- */
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--accent-cyan);
+}
+
+.brand-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #ffffff 40%, var(--accent-cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  background: rgba(0, 229, 255, 0.15);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  color: var(--accent-cyan);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.top-telemetry {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.telemetry-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.telemetry-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+
+.telemetry-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   Buttons & Pills
+   -------------------------------------------------------------------------- */
+.icon-btn, .text-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+  color: var(--text-main);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover, .text-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.icon-btn:active, .text-btn:active {
+  transform: translateY(0);
+}
+
+.icon-btn.active, .text-btn.active {
+  background: rgba(0, 229, 255, 0.18);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.icon-btn svg, .text-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* --------------------------------------------------------------------------
+   Middle Row: Eclipse Banner & Floating Cards
+   -------------------------------------------------------------------------- */
+.middle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+/* Eclipse Alert Banner */
+.eclipse-alert-banner {
+  pointer-events: auto;
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(255, 51, 102, 0.9) 0%, rgba(157, 78, 221, 0.85) 100%);
+  color: #ffffff;
+  padding: 10px 24px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 25px rgba(255, 51, 102, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  animation: pulse-glow 2s infinite ease-in-out;
+  transition: opacity 0.3s ease;
+}
+
+.eclipse-alert-banner.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 51, 102, 0.4); }
+  50% { box-shadow: 0 0 35px rgba(255, 51, 102, 0.8); }
+}
+
+/* Right Side: Lunar & Season HUD */
+.right-hud-stack {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 250px;
+  margin-left: auto;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px 8px 16px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.card-title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.card-body {
+  padding: 14px 16px;
+}
+
+/* Moon Phase Widget */
+.moon-phase-widget {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+#moon-phase-canvas {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.25));
+}
+
+.moon-phase-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.phase-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.phase-illum {
+  font-size: 0.82rem;
+  color: var(--accent-cyan);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+/* Season Widget */
+.season-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.season-row:last-child {
+  margin-bottom: 0;
+}
+
+.season-hemisphere {
+  color: var(--text-muted);
+}
+
+.season-name {
+  font-weight: 600;
+  color: var(--accent-gold);
+}
+
+/* --------------------------------------------------------------------------
+   Bottom Dock: Controls, Timers, Jump Buttons, Cameras, Aids
+   -------------------------------------------------------------------------- */
+.bottom-dock {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  align-items: flex-end;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.dock-section {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+/* Time & Playback Controls */
+.time-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.play-pause-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  border: none;
+  color: #030814;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.play-pause-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 22px rgba(0, 229, 255, 0.65);
+}
+
+.play-pause-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 110px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--accent-cyan);
+}
+
+.speed-badge {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  min-width: 68px;
+}
+
+/* Event Jump Buttons Grid */
+.jump-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.jump-btn {
+  padding: 6px 10px;
+  font-size: 0.76rem;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.jump-btn:hover {
+  background: rgba(0, 229, 255, 0.15);
+  border-color: var(--accent-cyan);
+  color: #ffffff;
+}
+
+.jump-btn.highlight {
+  border-color: rgba(255, 51, 102, 0.4);
+  color: #ff99aa;
+}
+
+.jump-btn.highlight:hover {
+  background: rgba(255, 51, 102, 0.2);
+  border-color: var(--accent-rose);
+  color: #ffffff;
+}
+
+/* Camera Preset Buttons */
+.camera-presets-group {
+  display: flex;
+  gap: 6px;
+}
+
+.cam-preset-btn {
+  padding: 8px 12px;
+  font-size: 0.78rem;
+}
+
+/* Visual Aids Checkbox Grid */
+.aids-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 14px;
+}
+
+.aid-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.aid-checkbox-label input[type="checkbox"] {
+  accent-color: var(--accent-cyan);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   Educational Guide Modal
+   -------------------------------------------------------------------------- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(2, 4, 10, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  transition: opacity 0.3s ease;
+}
+
+.modal-backdrop.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.guide-dialog {
+  width: 100%;
+  max-width: 820px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.modal-close-btn:hover {
+  color: #ffffff;
+}
+
+.modal-close-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.guide-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 24px;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid var(--panel-border);
+  overflow-x: auto;
+}
+
+.guide-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.guide-tab-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.guide-tab-btn.active {
+  color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.12);
+  font-weight: 600;
+}
+
+.guide-body {
+  padding: 24px;
+  overflow-y: auto;
+  line-height: 1.65;
+  font-size: 0.95rem;
+  color: #d1d9e6;
+}
+
+.guide-topic-content {
+  display: none;
+}
+
+.guide-topic-content.active {
+  display: block;
+}
+
+.guide-topic-content h3 {
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+  color: #ffffff;
+}
+
+.guide-topic-content p {
+  margin-bottom: 14px;
+}
+
+.guide-topic-content ul {
+  padding-left: 20px;
+  margin-bottom: 14px;
+}
+
+.guide-topic-content li {
+  margin-bottom: 6px;
+}
+
+.guide-callout {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(0, 229, 255, 0.08);
+  border-left: 4px solid var(--accent-cyan);
+  margin: 16px 0;
+  font-size: 0.88rem;
+  color: #b8e2f2;
+}
+
+.guide-key-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.guide-key-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+kbd {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--accent-cyan);
+}
+
+/* --------------------------------------------------------------------------
+   Utility & Responsive Media Queries
+   -------------------------------------------------------------------------- */
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 1024px) {
+  .bottom-dock {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .right-hud-stack {
+    width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .top-telemetry {
+    display: none;
+  }
+  .bottom-dock {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .camera-presets-group {
+    flex-wrap: wrap;
+  }
+  .right-hud-stack {
+    position: absolute;
+    bottom: 80px;
+    right: 16px;
+    width: 190px;
+  }
+}

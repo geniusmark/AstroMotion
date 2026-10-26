@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AstroMotion — 3D Earth, Moon & Sun Celestial Simulator</title>
+  <meta name="description" content="Interactive 3D simulation of Earth, Moon, and Sun astronomical motions, axial tilt, seasons, lunar phases, and eclipses using Three.js.">
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <!-- Three.js Core with multi-CDN fallback -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script>
+    if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+      document.write('<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+    }
+  </script>
+</head>
+<body>
+  <!-- 3D Canvas WebGL Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Initial Loading Screen -->
+  <div id="loading-overlay">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">AstroMotion</div>
+    <div class="loader-sub">Initializing 3D Celestial Orbits & Shaders...</div>
+  </div>
+
+  <!-- Interactive Observatory HUD -->
+  <main class="observatory-hud">
+    <!-- 1. TOP TELEMETRY HEADER -->
+    <header class="top-header glass-panel">
+      <div class="app-brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2"></path>
+          <path d="M12 20v2"></path>
+          <path d="M4.93 4.93l1.41 1.41"></path>
+          <path d="M17.66 17.66l1.41 1.41"></path>
+          <path d="M2 12h2"></path>
+          <path d="M20 12h2"></path>
+          <path d="M6.34 17.66l-1.41 1.41"></path>
+          <path d="M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <span class="brand-title">AstroMotion</span>
+        <span class="brand-badge">Three.js</span>
+      </div>
+
+      <!-- Real-time Astronomical Telemetry -->
+      <div class="top-telemetry">
+        <div class="telemetry-item">
+          <span class="telemetry-label">Simulation Date</span>
+          <span id="hud-date" class="telemetry-value">Mar 20, 2026</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">Progress</span>
+          <span id="hud-day-count" class="telemetry-value">Day 79 of 365</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">Subsolar Latitude</span>
+          <span id="hud-subsolar-lat" class="telemetry-value">0.0°</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">Scale Mode</span>
+          <select id="scale-select" class="glass-select" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; outline: none; cursor: pointer;">
+            <option value="didactic">Visual / Didactic</option>
+            <option value="earthMoonFocus">Earth-Moon Focus</option>
+            <option value="proportional">Proportional Size</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Actions: Audio, Guide Modal -->
+      <div class="top-actions">
+        <button id="btn-audio-toggle" class="icon-btn" title="Toggle Cosmic Ambient Drone (M)" aria-label="Toggle Cosmic Audio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <span>Audio</span>
+        </button>
+        <input id="audio-vol-slider" type="range" min="0" max="1" step="0.05" value="0.5" style="width: 50px;" title="Audio Volume">
+
+        <button id="btn-open-guide" class="text-btn" title="Astronomical Guide & Keybindings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>Observatory Guide</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. MIDDLE ROW: ECLIPSE BANNER & HUD CARDS -->
+    <div class="middle-row">
+      <!-- Floating Eclipse Warning Banner -->
+      <aside id="eclipse-banner" class="eclipse-alert-banner hidden">
+        <svg style="width:22px;height:22px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span id="eclipse-text">Eclipse In Progress</span>
+      </aside>
+
+      <!-- Right Side Stack: Moon Phase & Seasonal Tracker -->
+      <aside class="right-hud-stack">
+        <!-- Moon Phase Card -->
+        <div class="glass-panel observatory-panel">
+          <div class="card-header">
+            <span class="card-title">Lunar Phase</span>
+            <span id="hud-phase-illum" class="phase-illum">0%</span>
+          </div>
+          <div class="card-body">
+            <div class="moon-phase-widget">
+              <canvas id="moon-phase-canvas" width="120" height="120"></canvas>
+              <div class="moon-phase-info">
+                <span id="hud-phase-name" class="phase-name">New Moon</span>
+                <span style="font-size: 0.72rem; color: #8b9bb4; margin-top: 4px;">Synodic cycle: 29.5d</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seasons & Solstice Card -->
+        <div class="glass-panel observatory-panel">
+          <div class="card-header">
+            <span class="card-title">Earth Seasons (23.4° Tilt)</span>
+          </div>
+          <div class="card-body">
+            <div class="season-row">
+              <span class="season-hemisphere">North:</span>
+              <span id="hud-season-north" class="season-name">Spring</span>
+            </div>
+            <div class="season-row">
+              <span class="season-hemisphere">South:</span>
+              <span id="hud-season-south" class="season-name">Autumn</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- 3. BOTTOM DOCK: CONTROLS, JUMPS, CAMERAS, AIDS -->
+    <footer class="bottom-dock">
+      <!-- Time & Simulation Controls -->
+      <div class="glass-panel dock-section">
+        <span class="section-label">Simulation Time</span>
+        <div class="time-controls-row">
+          <button id="btn-reverse" class="icon-btn" title="Reverse Time Flow" style="padding: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 19 2 12 11 5 11 19"></polygon>
+              <polygon points="22 19 13 12 22 5 22 19"></polygon>
+            </svg>
+          </button>
+          <button id="btn-step-back" class="icon-btn" title="Step Back 1 Day (←)" style="padding: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </button>
+          <button id="btn-play-pause" class="play-pause-btn" title="Play / Pause (Space)">
+            <svg id="play-icon" class="hidden" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <svg id="pause-icon" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          </button>
+          <button id="btn-step-forward" class="icon-btn" title="Step Forward 1 Day (→)" style="padding: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+          <button id="btn-reset-time" class="icon-btn" title="Reset to Spring Equinox" style="padding: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="slider-container">
+          <input id="time-speed-slider" type="range" min="-30" max="60" step="0.5" value="1.0">
+          <span id="speed-value-text" class="speed-badge">1.0 days/s</span>
+        </div>
+      </div>
+
+      <!-- Astronomical Event Fast-Jumps -->
+      <div class="glass-panel dock-section">
+        <span class="section-label">Astro Fast Jumps</span>
+        <div class="jump-buttons-grid">
+          <button id="jump-spring" class="jump-btn">Vernal Equinox</button>
+          <button id="jump-summer" class="jump-btn">Summer Solstice</button>
+          <button id="jump-autumn" class="jump-btn">Autumn Equinox</button>
+          <button id="jump-winter" class="jump-btn">Winter Solstice</button>
+          <button id="jump-solar-eclipse" class="jump-btn highlight">Solar Eclipse</button>
+          <button id="jump-lunar-eclipse" class="jump-btn highlight">Lunar Eclipse</button>
+        </div>
+      </div>
+
+      <!-- Camera Perspectives -->
+      <div class="glass-panel dock-section">
+        <span class="section-label">Camera Perspectives</span>
+        <div class="camera-presets-group">
+          <button class="icon-btn cam-preset-btn active" data-mode="overview" title="Full System View (1)">Overview</button>
+          <button class="icon-btn cam-preset-btn" data-mode="earth_track" title="Track Earth Orbit (2)">Track Earth</button>
+          <button class="icon-btn cam-preset-btn" data-mode="moon_phase" title="Earth-to-Moon Phase View (3)">Moon Phase</button>
+          <button class="icon-btn cam-preset-btn" data-mode="earthrise" title="Moon-to-Earth Earthrise (4)">Earthrise</button>
+          <button class="icon-btn cam-preset-btn" data-mode="sun_perspective" title="Sun's Perspective (5)">Sun View</button>
+          <button class="icon-btn cam-preset-btn" data-mode="top_down" title="Polar Top-Down Ecliptic (6)">Top-Down</button>
+        </div>
+      </div>
+
+      <!-- Visual Aids Toggles -->
+      <div class="glass-panel dock-section">
+        <span class="section-label">Visual Aids</span>
+        <div class="aids-checkbox-grid">
+          <label class="aid-checkbox-label">
+            <input type="checkbox" id="chk-orbits" checked>
+            <span>Orbits</span>
+          </label>
+          <label class="aid-checkbox-label">
+            <input type="checkbox" id="chk-axes" checked>
+            <span>23.4° Axis / Polaris</span>
+          </label>
+          <label class="aid-checkbox-label">
+            <input type="checkbox" id="chk-latitudes" checked>
+            <span>Equator & Tropics</span>
+          </label>
+          <label class="aid-checkbox-label">
+            <input type="checkbox" id="chk-planes" checked>
+            <span>Ecliptic / Node Planes</span>
+          </label>
+          <label class="aid-checkbox-label">
+            <input type="checkbox" id="chk-shadows" checked>
+            <span>Eclipse Shadows</span>
+          </label>
+          <label class="aid-checkbox-label">
+            <input type="checkbox" id="chk-stars" checked>
+            <span>Starfield</span>
+          </label>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- 4. EDUCATIONAL OBSERVATORY GUIDE MODAL -->
+  <aside id="guide-modal" class="modal-backdrop hidden">
+    <div class="glass-panel guide-dialog">
+      <div class="modal-header">
+        <h2 class="modal-title">Astronomical Observatory Guide</h2>
+        <button id="btn-close-guide" class="modal-close-btn" aria-label="Close guide">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="guide-tabs">
+        <button class="guide-tab-btn active" data-topic="seasons">1. The 4 Seasons</button>
+        <button class="guide-tab-btn" data-topic="phases">2. Lunar Phases & Tidal Lock</button>
+        <button class="guide-tab-btn" data-topic="eclipses">3. Eclipses & The 5.14° Tilt</button>
+        <button class="guide-tab-btn" data-topic="shortcuts">4. Shortcuts & Controls</button>
+      </nav>
+
+      <div class="guide-body">
+        <article id="topic-seasons" class="guide-topic-content active">
+          <h3>Why Do We Have Seasons?</h3>
+          <p>A common misconception is that seasons are caused by Earth moving closer to or farther from the Sun. In reality, Earth's orbit is nearly circular (eccentricity 0.0167), and Earth is actually <em>closest</em> to the Sun in January!</p>
+          <p>Seasons are caused entirely by Earth's <strong>axial tilt of 23.44°</strong> relative to the perpendicular of its orbital (ecliptic) plane.</p>
+          <div class="guide-callout">
+            <strong>Key Mechanism:</strong> As Earth orbits the Sun, its rotational axis remains fixed in direction in inertial space, pointing continuously toward <em>Polaris (the North Star)</em>.
+          </div>
+          <ul>
+            <li><strong>June Solstice (Summer in North):</strong> The Northern hemisphere tilts directly toward the Sun, resulting in steep solar incidence angles, concentrated heat energy, and long daylight hours (Midnight Sun in the Arctic).</li>
+            <li><strong>December Solstice (Winter in North):</strong> The Northern hemisphere tilts away, receiving shallow, spread-out sunlight and short daylight hours.</li>
+            <li><strong>Equinoxes (March & September):</strong> Neither pole tilts toward the Sun; sunlight strikes the Equator head-on, giving equal 12-hour day and night worldwide.</li>
+          </ul>
+        </article>
+
+        <article id="topic-phases" class="guide-topic-content">
+          <h3>The Lunar Phase Cycle & Tidal Locking</h3>
+          <p>The Moon does not emit its own visible light; it reflects sunlight. As the Moon circles Earth every <strong>27.3 days (sidereal month)</strong>, the angle between Sun, Earth, and Moon changes.</p>
+          <p>Because Earth is also moving around the Sun, it takes the Moon <strong>29.5 days (synodic month)</strong> to cycle through all 8 lunar phases from one New Moon to the next.</p>
+          <div class="guide-callout">
+            <strong>Tidal Locking:</strong> Notice in the simulation how the exact same lunar surface features (such as Mare Tranquillitatis and the Tycho crater rays) always point directly toward Earth! Gravitational tidal friction slowed the Moon's rotation over billions of years until its axial rotation period exactly equaled its orbital period.
+          </div>
+          <ul>
+            <li><strong>New Moon:</strong> Moon is between Earth and Sun; the illuminated side faces away from Earth.</li>
+            <li><strong>First / Third Quarter:</strong> Half of the visible lunar disc is illuminated.</li>
+            <li><strong>Full Moon:</strong> Moon is opposite the Sun; the entire near side is bathed in direct sunlight.</li>
+          </ul>
+        </article>
+
+        <article id="topic-eclipses" class="guide-topic-content">
+          <h3>Why Don't Eclipses Happen Every Month?</h3>
+          <p>If the Moon orbited in the exact same plane as Earth orbits the Sun (the ecliptic plane), we would have a Solar Eclipse every New Moon and a Lunar Eclipse every Full Moon.</p>
+          <div class="guide-callout">
+            <strong>The 5.145° Inclination:</strong> The Moon's orbital plane is tilted by approximately <strong>5.145°</strong> with respect to the ecliptic plane. Most months, the Moon passes slightly above or below the Sun-Earth line, casting its shadow harmlessly into empty space.
+          </div>
+          <p>Eclipses can only occur when the Moon crosses the ecliptic at the <strong>Line of Nodes</strong> (the ascending or descending node) at the exact time of a New or Full Moon:</p>
+          <ul>
+            <li><strong>Solar Eclipse:</strong> Moon crosses a node during a New Moon, casting its umbral shadow cone onto Earth.</li>
+            <li><strong>Lunar Eclipse (Blood Moon):</strong> Moon crosses a node during a Full Moon, entering Earth's umbral shadow cone. Earth's atmosphere filters blue light and refracts sunset-red light onto the lunar surface!</li>
+          </ul>
+        </article>
+
+        <article id="topic-shortcuts" class="guide-topic-content">
+          <h3>Observatory Shortcuts & Controls</h3>
+          <div class="guide-key-list">
+            <div class="guide-key-item"><kbd>Space</kbd> <span>Play / Pause simulation</span></div>
+            <div class="guide-key-item"><kbd>→</kbd> <span>Step forward 1 day</span></div>
+            <div class="guide-key-item"><kbd>←</kbd> <span>Step backward 1 day</span></div>
+            <div class="guide-key-item"><kbd>1</kbd> <span>System Overview Camera</span></div>
+            <div class="guide-key-item"><kbd>2</kbd> <span>Track Earth Orbit</span></div>
+            <div class="guide-key-item"><kbd>3</kbd> <span>Moon Phase View (from Earth)</span></div>
+            <div class="guide-key-item"><kbd>4</kbd> <span>Earthrise View (from Moon)</span></div>
+            <div class="guide-key-item"><kbd>5</kbd> <span>Sun's Perspective</span></div>
+            <div class="guide-key-item"><kbd>6</kbd> <span>Top-Down Ecliptic Plane</span></div>
+            <div class="guide-key-item"><kbd>M</kbd> <span>Toggle Ambient Audio Soundscape</span></div>
+            <div class="guide-key-item"><kbd>H</kbd> <span>Toggle HUD Panels</span></div>
+            <div class="guide-key-item"><kbd>Mouse Drag</kbd> <span>Orbit & Rotate 3D Camera</span></div>
+            <div class="guide-key-item"><kbd>Scroll</kbd> <span>Zoom In / Out</span></div>
+            <div class="guide-key-item"><kbd>Right Click</kbd> <span>Pan Viewport</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Consolidated Application Bundle (Works on both file:// and http://) -->
+  <script src="js/app.js"></script>
+</body>
+</html>
