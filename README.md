@@ -2,6 +2,8 @@
 
 An interactive, scientifically inspired 3D celestial motion visualizer built with **Three.js** and vanilla JavaScript. **AstroMotion** simulates the dynamic gravitational choreography of the Sun, Earth, and Moon, illustrating why we experience the 4 seasons, how lunar phases evolve, why the Moon is tidally locked, and why solar and lunar eclipses occur.
 
+![AstroMotion 3D Celestial Observatory](screenshot.png)
+
 ---
 
 ## ✨ Features
@@ -97,6 +99,7 @@ c:\_dev\GoogleAntigravityProjects\AstroMotion/
 ├── index.html          # Main HTML5 entry point & glassmorphic observatory UI
 ├── serve.py            # Local Python server with automatic browser launch
 ├── run.bat             # Windows 1-click batch launcher
+├── screenshot.png      # Application observatory preview screenshot
 ├── README.md           # Project documentation & astronomical guide
 │
 ├── css/
