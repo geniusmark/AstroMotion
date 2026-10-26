@@ -111,3 +111,12 @@ c:\_dev\GoogleAntigravityProjects\AstroMotion/
     ├── ui.js           # HUD telemetry, camera lerping, 2D phase canvas, event listeners
     └── audio.js        # Procedural Web Audio API cosmic soundscape
 ```
+
+---
+
+## 🤖 Development & Environment
+
+This project was created and developed with:
+- **IDE**: **Google Antigravity** (Antigravity IDE)
+- **AI Model**: **Gemini 3.8 Flash** by Google DeepMind
+
